@@ -1069,29 +1069,35 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
         }
             break;
             
-        case AVRO_FIXED:
-        {
-            json_t *json_size = json_object_get(json, "size");
-            json_t *json_name = json_object_get(json, "name");
-            json_int_t size;
-            const char *name;
-            if (!json_is_integer(json_size)) {
-                avro_set_error("Fixed type must have a \"size\"");
-                return EINVAL;
-            }
-            if (!json_is_string(json_name)) {
-                avro_set_error("Fixed type must have a \"name\"");
-                return EINVAL;
-            }
-            size = json_integer_value(json_size);
-            name = json_string_value(json_name);
-            *schema = avro_schema_fixed(name, (int64_t) size);
-            if (save_named_schemas(name, parent_namespace, *schema, named_schemas)) {
-                avro_set_error("Cannot save fixed schema");
-                return ENOMEM;
-            }
-        }
-            break;
+		case AVRO_FIXED:
+		{
+		    json_t *json_size = json_object_get(json, "size");
+		    json_t *json_name = json_object_get(json, "name");
+		    json_t *json_namespace = json_object_get(json, "namespace");
+		    json_int_t size;
+		    const char *name;
+		    const char *namespace;
+		    if (!json_is_integer(json_size)) {
+		        avro_set_error("Fixed type must have a \"size\"");
+		        return EINVAL;
+		    }
+		    if (!json_is_string(json_name)) {
+		        avro_set_error("Fixed type must have a \"name\"");
+		        return EINVAL;
+		    }
+		    namespace = json_string_value(json_namespace);
+		    if (!namespace) {
+		        namespace = parent_namespace;
+		    }
+		    size = json_integer_value(json_size);
+		    name = json_string_value(json_name);
+		    *schema = avro_schema_fixed(name, (int64_t) size);
+		    if (save_named_schemas(name, namespace, *schema, named_schemas)) {
+		        avro_set_error("Cannot save fixed schema");
+		        return ENOMEM;
+		    }
+		}
+		    break;
             
         default:
             avro_set_error("Unknown schema type");
